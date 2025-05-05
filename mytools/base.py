@@ -3,7 +3,7 @@ import os
 import json
 
 
-def yelloStr(str): return f"\033[0;93m {str}\033[0m"
+def yellowStr(str): return f"\033[0;93m {str}\033[0m"
 
 
 def redStr(str): return f"\033[0;91m {str}\033[0m"
@@ -13,6 +13,20 @@ def greenStr(str): return f"\033[0;92m {str}\033[0m"
 
 
 def pinkStr(str): return f"\033[0;95m {str}\033[0m"
+
+def mkdir(dirPath):
+    """
+    创建目录，如果目录已存在则忽略，如果创建失败则抛出异常。
+    """
+    try:
+        if not os.path.exists(dirPath):
+            os.makedirs(dirPath, exist_ok=True)
+        #     return
+        # else:
+        #     raise Exception(yelloStr(f"[!] 虽然未抛异常，但目录仍未成功创建: {dirPath}"))
+    except Exception as e:
+        print(redStr(f"[!] 创建目录失败: {dirPath}"))
+        raise e
 
 
 def appenFile(filePath, fileContent):
@@ -36,11 +50,11 @@ def writeFile(filePath, fileContent):
         if isinstance(fileContent, list):
             # 如果是列表，逐行写入，每项自动添加换行符
             f.writelines([str(line).rstrip() + "\n" for line in fileContent])
-            print(f"列表类型数据保存成功, 保存路径为: {filePath}")
+            # print(f"列表类型数据保存成功, 保存路径为: {filePath}")
         else:
             # 如果是字符串，直接写
             f.write(str(fileContent) + "\n")
-            print(f"字符串类型数据保存成功, 保存路径为: {filePath}")
+            # print(f"字符串类型数据保存成功, 保存路径为: {filePath}")
 
 
 def readFile(fileName):

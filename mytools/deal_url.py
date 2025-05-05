@@ -7,7 +7,9 @@ def format_url(url):
     # 检测 url 是否为 http:// 或者 https:// 开头的
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "http://" + url
-    parsed = urlparse(url)
+    if ':' not in url.split(":")[1]:
+        url += ':80'
+    # parsed = urlparse(url)
     # url = "https://test.example.com:443/page?id=123"
     # 将  url 进行切割为 对象形式, 分别存储 协议,域名,端口,路径,参数
     # scheme    https
@@ -17,10 +19,9 @@ def format_url(url):
     # path      /page
     # query     id=123
     # url = "https://test.example.com:443/page?id=123"
-    netloc = parsed.netloc
-    if ':' not in parsed.netloc:
-        netloc += ':80'
-    return f"{parsed.scheme}://{parsed.netloc}"
+    # netloc = parsed.netloc
+
+    return f"{url}"
 
 
 def format_urls(urls, message=0):
@@ -58,13 +59,15 @@ def is_domain(s):
 
 
 def format_domains(urls, message=0):
+    # print(f"format_domains(urls)[0] --> http://domain:8080\n")
+    # print(f"format_domains(urls)[1] --> http://domain\n")
+    # print(f"format_domains(urls)[2] --> domain\n")
     domains_full = []
     domains_basic = []
     domains_raw = []
 
     # 确保 urls 是标准的 url
     urls = format_urls(urls)[0]
-
     for url in urls:
         url = url.replace("\n", "")
         if not url:

@@ -5,5 +5,5 @@
 ## 安装
 
 ```bash
-pip install git+https://github.com/yourname/mytools.git
+pip install git+https://github.com/shadowOats/mytools.git
 ```

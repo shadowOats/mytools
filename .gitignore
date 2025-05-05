@@ -1,0 +1,22 @@
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# VSCode 或 PyCharm 等 IDE 设置
+.vscode/
+.idea/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 配置或私密文件
+*.env
+*.log
+*.sqlite3

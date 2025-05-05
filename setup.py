@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='mytools',
-    version='0.1.0',
+    version='0.2.0',
     description='My personal tools',
     author='Oats',
     author_email='1008611@qq.com',

@@ -21,8 +21,6 @@ chrome_options = webdriver.ChromeOptions()
 chrome_options.binary_location = chrome_path
 
 browser = webdriver.Chrome(chrome_options=chrome_options)
-browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
-
 
 def wait_for_weight(xpath, timeout=10):
     """等待目标图片加载并提取src中的权重数字"""
@@ -99,6 +97,8 @@ def find_weight(url, total):
 
 
 def web_weight_main():
+    browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
+
     into_page()
     urls = readFile("input/urls.txt")
     urls = format_domains(urls)[2]

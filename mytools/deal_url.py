@@ -50,7 +50,6 @@ def format_urls(urls, message=0):
         print(f"format_urls(urls)[0] --> http://host:8080\n")
         print(f"format_urls(urls)[1] --> http://host\n")
         print(f"format_urls(urls)[2] --> host\n")
-    print(urls_full)
     return [urls_full, urls_basic, urls_raw]
 
 

@@ -103,9 +103,9 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
         writeFile(f"{dir}/ips.txt", ips)
         writeFile(f"{dir}/urls.txt", urls)
 
-        print(pinkStr(f"老公~~ 人家已经帮你把资产找出来了噢, 存放在目录 {dir} 下啦~~ 今晚记得奖励人家噢 QAQ"))
+        print(pinkStr(f"\n老公~~ 人家已经帮你把资产找出来了噢, 存放在目录 {dir} 下啦~~ 今晚记得奖励人家噢 QAQ"))
     except Exception as e:
-        print(pinkStr(f"老公~~ 出现报错了呢... 这边建议检查一下小猫咪有没有关噢~~\n") + e)
+        print(pinkStr("\n老公~~ 出现报错了呢... 这边建议检查一下小猫咪有没有关噢~~\n") + str(e))
 
 
 def fofa_api_main():

@@ -29,6 +29,7 @@ def run_post_exp(config, url, save_dir, command):
         print(e)
     return res
 
+
 def exp(config, url, command=""):
     save_dir = f"3-exp_output/res.txt"
 
@@ -76,3 +77,11 @@ def shell(cmd, url):
             shell(cmd, url)
         except Exception as e:
             print(redStr(e))
+
+
+def main():
+    print()
+
+
+if __name__ == '__main__':
+    main()

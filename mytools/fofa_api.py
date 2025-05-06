@@ -100,3 +100,28 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
         print(pinkStr(f"老公~~ 人家已经帮你把资产找出来了噢, 存放在目录 {dir} 下啦~~ 今晚记得奖励人家噢 QAQ"))
     except Exception as e:
         print(pinkStr(f"老公~~ 出现报错了呢... 这边建议检查一下小猫咪有没有关噢~~\n") + e)
+
+
+def main():
+    # 基本参数
+    # 使用不正规的 fofa
+    main_url = 'http://fofa.xmint.cn'
+    email = ""
+    key = '45d8cfcccaf45289ca2cc204642543ff'
+
+    # 适用正规的 fofa
+    # main_url = 'https://fofa.info'
+    # email = '18563245634@163.com'
+    # key = '59746060c289b3edd58a60d9c9d09b91'
+
+    # query = 'title="Vite App" || body="Powered by Vite" || header="vite"'
+    query = str(input("请输入fofa语句: "))
+    size = str(input("请输入你要的结果条数(最大10000条，输入 -1 给你拿 10000 条): "))
+    if size == '-1':
+        size = '10000'
+
+    fofa_gogogo(main_url, email, key, query, size)
+
+
+if __name__ == '__main__':
+    main()

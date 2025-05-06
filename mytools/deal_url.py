@@ -7,7 +7,7 @@ def format_url(url):
     # 检测 url 是否为 http:// 或者 https:// 开头的
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "http://" + url
-    if ':' not in url.split(":")[1]:
+    if ':' not in url.split("://")[1]:
         url += ':80'
     # parsed = urlparse(url)
     # url = "https://test.example.com:443/page?id=123"
@@ -30,23 +30,27 @@ def format_urls(urls, message=0):
     urls_raw = []  # domain/ip
 
     for url in urls:
-        url = url.replace("\n", "")
-        if not url:
-            continue
-        full = format_url(url)
-        parsed = urlparse(full)
-        scheme_host_port = f"{parsed.scheme}://{parsed.hostname}:{parsed.port}"
-        scheme_host = f"{parsed.scheme}://{parsed.hostname}"
-        host = parsed.hostname
+        try:
+            url = url.replace("\n", "")
+            if not url:
+                continue
+            full = format_url(url)
+            parsed = urlparse(full)
+            scheme_host_port = f"{parsed.scheme}://{parsed.hostname}:{parsed.port}"
+            scheme_host = f"{parsed.scheme}://{parsed.hostname}"
+            host = parsed.hostname
 
-        urls_full.append(scheme_host_port)
-        urls_basic.append(scheme_host)
-        urls_raw.append(host)
+            urls_full.append(scheme_host_port)
+            urls_basic.append(scheme_host)
+            urls_raw.append(host)
+        except Exception as e:
+            print(e)
 
     if message:
         print(f"format_urls(urls)[0] --> http://host:8080\n")
         print(f"format_urls(urls)[1] --> http://host\n")
         print(f"format_urls(urls)[2] --> host\n")
+    print(urls_full)
     return [urls_full, urls_basic, urls_raw]
 
 

@@ -1,80 +1,124 @@
-import random
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import sys
+import re
 from time import sleep
-from lxml import etree
-from .base import *
-from .deal_url import *
-import urllib3
-import requests
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+sys.path.append("/base_tool/base_tool/")
+from mytools import *  # 自定义工具模块
+import os
 
-headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-    'Cache-Control': 'max-age=0',
-    'Connection': 'keep-alive',
-    'Upgrade-Insecure-Requests': '1',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0',
-}
+# 相对路径
+chrome_page = "Chrome/Application/chrome.exe"
 
-urls = ['baidu.com', 'taobao.com', 'jingdong.com', 'xiaomi.com']
+# 获取当前脚本所在目录（不是运行目录）
+base_dir = os.path.dirname(os.path.abspath(__file__))
+chrome_path = os.path.join(base_dir, chrome_page)
+# chrome_options.add_argument("--headless")  # 如需后台运行可启用此项
+
+# 初始化 Chrome 配置
+chrome_options = webdriver.ChromeOptions()
+chrome_options.binary_location = chrome_path
+
+browser = webdriver.Chrome(chrome_options=chrome_options)
+browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
 
 
-def find_url(url, count):
-    try:
-        query_url = 'https://www.aizhan.com/cha/' + url.replace('\n', "")
-        flag = 1
-        res = ""
-        while 1:
-            response = requests.get(query_url, headers=headers, verify=False, timeout=5)
-            txt = response.text
-            html = etree.HTML(txt)
-            content1 = html.xpath(f'/html/body/div[5]/div[2]/div[2]/table/tr[2]/td/ul/li[1]/a/img/@alt')
-            content2 = html.xpath(f'/html/body/div[5]/div[2]/div[2]/table/tr[2]/td/ul/li[3]/a/img/@alt')
-            content3 = html.xpath(f'/html/body/div[5]/div[2]/div[2]/table/tr[2]/td/ul/li[4]/a/img/@alt')
-            content4 = html.xpath(f'/html/body/div[5]/div[2]/div[2]/table/tr[2]/td/ul/li[7]/a/img/@alt')
-            if "n" not in content1 and "n" not in content2 and "n" not in content3 and "n" not in content4 and "n" not in content1:
-                count += 1
-                res = f"No: {count}\n{url} 的权重如下所示: \n百度 的权重为: {content1[0]}\n搜狗 的权重为: {content2[0]}\n360 的权重为: {content3[0]}\n谷歌 的权重为: {content4[0]}\n\n"
-                print(f"{url} 的权重如下所示: ")
-                print(greenStr(f"百度 的权重为: {content1[0]}"))
-                print(greenStr(f"搜狗 的权重为: {content2[0]}"))
-                print(greenStr(f"360 的权重为: {content3[0]}"))
-                print(greenStr(f"谷歌 的权重为: {content4[0]}\n"))
-                return res
-            sleep(1 + random.random(1, 2))
-            print(f"正在查询中, 请稍等...{flag}秒")
-            flag += 1
+def wait_for_weight(xpath, timeout=10):
+    """等待目标图片加载并提取src中的权重数字"""
+    for i in range(timeout):
+        try:
+            img = browser.find_element(By.XPATH, xpath)
+            src = img.get_attribute("src")
+            # print(f"[debug] 第{i + 1}秒 - src={src}")
+            match = re.search(r'/(\d)\.png', src)
+            if match:
+                return int(match.group(1))
+        except Exception as e:
+            print(f"[debug] 等待异常: {e}")
+        sleep(1)
+    return None
+
+
+def into_page():
+    """等待首页加载完成"""
+    while True:
+        content = browser.page_source
+        if "百度" in content and "移动" in content:
+            print("已进入目标页面")
+            break
+        sleep(2)
+
+
+def send_query(url):
+    """将URL输入并提交查询"""
+    input_element = browser.find_element(By.XPATH, '//*[@id="domain"]')
+    input_element.clear()
+    input_element.send_keys(url)
+
+    submit_button = browser.find_element(By.XPATH, '//*[@id="c0"]/div[2]/form/input[2]')
+    submit_button.click()
+
+
+# 全局变量
+count = 0
+have_weight = 0
+
+
+def test(url):
+    global have_weight
+    """等待并提取所有搜索引擎权重"""
+    baidu = wait_for_weight('/html/body/div[5]/div[2]/div[2]/table/tbody/tr[2]/td/ul/li[1]/a/img') or 0
+    sogou = wait_for_weight('/html/body/div[5]/div[2]/div[2]/table/tbody/tr[2]/td/ul/li[3]/a/img') or 0
+    so360 = wait_for_weight('/html/body/div[5]/div[2]/div[2]/table/tbody/tr[2]/td/ul/li[4]/a/img') or 0
+    google = wait_for_weight('/html/body/div[5]/div[2]/div[2]/table/tbody/tr[2]/td/ul/li[7]/a/img') or 0
+
+    if sum([baidu, sogou, so360, google]) > 0:
+        have_weight += 1
+        res = f"\nNo: {have_weight}\nurl: {url}\n百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
+        print(greenStr(res))
         return res
-    except Exception as e:
-        if "Max retries" in str(e):
-            print(pinkStr(f"请关闭代理, 亲~"))
-        else:
-            print(redStr(e))
+    res = f"\n百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
+    print(yellowStr(res))
+    return ""
 
 
-def main():
+def find_weight(url, total):
+    global count
+    """主查询逻辑"""
     try:
-        urls = readFile('input/urls.txt')
-        urls = format_domains(urls)[2]
-        count = 0
-        save_path = f"output/{nowTime()}/result.txt"
-        mkdir(os.path.dirname(save_path))  # 只传入目录部分
-        result = ""
-        for url in urls:
-            res = find_url(url, count)
-            if res:
-                result += f"{res}"
-                count += 1
-        writeFile(save_path, result)
-        if count == 0:
-            print(yellowStr(f"一个有权重的域名都没有!!!"))
-            return
-        print(greenStr(f"恭喜你, 找到了 {count} 个有权重的域名."))
-        print(greenStr(f"域名列表已保存至路径: {save_path}"))
+        print(f"\n[{count + 1} / {total}] 查询: {url}")
+        count += 1
+        send_query(url)
+        res = test(url)
+        if res and len(res.strip()):
+            return res
+        return ""
     except Exception as e:
-        print(redStr(e))
+        print(f"[错误] 查询失败: {e}")
+
+
+def web_weight_main():
+    into_page()
+    urls = readFile("input/urls.txt")
+    urls = format_domains(urls)[2]
+    total = len(urls)
+    result = ""
+    for url in urls:
+        url = str(url).strip().replace("\n", "")
+        if not url:
+            continue
+        res = find_weight(url, total)
+        if len(res):
+            result += res
+    global have_weight
+    save_path = f"web_weight_out/{nowTime()}/res.txt"
+    if have_weight:
+        print(greenStr(f"\n恭喜你, 亲, 一共找到了 {have_weight} 个有权重的网站,已存储至路径: {save_path}"))
+        writeFile(save_path, result)
+        return
+    print(greenStr(f"\n一个有权重的网站都没有, 行不行的, 叼毛"))
 
 
 if __name__ == '__main__':
-    main()
+    web_weight_main()

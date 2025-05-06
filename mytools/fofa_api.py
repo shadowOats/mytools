@@ -35,6 +35,12 @@ def build_url(domain_or_ip, port):
 
 
 def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289ca2cc204642543ff", query="", size=0):
+    main_url = str(main_url)
+    email = str(email)
+    key = str(key)
+    query = str(query)
+    size = str(size)
+
     if not main_url:
         print(f"main_url is empty")
         return
@@ -49,7 +55,7 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
         return
 
     try:
-        if str(main_url) or str(key) or str(size):
+        if str(main_url)=="" or str(key)=="" or str(size)=="":
             print(f"请检查参数 main_url/key/query/size 是否可以正常使用.")
         query1 = str(base64.b64encode(query.encode('utf-8')), "utf-8")
         if '@' in email:
@@ -63,7 +69,7 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
         datas = resJson.get('results')
         print(f"共搜索到 {len(datas)} 条记录！")
 
-        print(datas)
+        # print(datas)
 
         # 创建输出目录
         timestamp = nowTime()
@@ -102,7 +108,7 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
         print(pinkStr(f"老公~~ 出现报错了呢... 这边建议检查一下小猫咪有没有关噢~~\n") + e)
 
 
-def main():
+def fofa_api_main():
     # 基本参数
     # 使用不正规的 fofa
     main_url = 'http://fofa.xmint.cn'
@@ -124,4 +130,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    fofa_api_main()

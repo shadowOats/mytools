@@ -52,5 +52,19 @@
 git add .
 git commit -m "你也不想被调查吧"
 git push
+
+
+```
+
+
+
+## 更新仓库
+
+```
+git status
+git init
+git remote add origin https://github.com/shadowOats/mytools.git
+git remote -v
+git pull origin main
 ```
 

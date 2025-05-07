@@ -3,6 +3,7 @@ from .base import *
 import requests
 import json
 import re
+from .base import *
 
 def is_valid_ip(ip):
     return re.fullmatch(r'(?:\d{1,3}\.){3}\d{1,3}', ip) is not None
@@ -73,8 +74,9 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
 
         # 创建输出目录
         timestamp = nowTime()
-        dir = f"output/{timestamp}"
-        os.makedirs(dir)
+        dir = f"output/fofa_api_output/({len(datas)})_{timestamp}"
+        # os.makedirs(dir)
+        mkdir(dir)
 
         # 准备数据
         domains, ips, urls = '', '', ''

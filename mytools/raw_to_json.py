@@ -1,54 +1,101 @@
 import json
+import os
+from .base import *
 
-# 文件路径
-input_file = "raw_poc.txt"
-output_file = "poc.json"
+def parse_raw_to_json(raw_file_path, config, output_file_path):
+    with open(raw_file_path, "r", encoding="utf-8") as f:
+        raw_data = f.read().strip()
 
-# 读取原始请求内容
-with open(input_file, "r", encoding="utf-8") as f:
-    raw_data = f.read().strip()
+    if not raw_data:
+        raw_file_path = str(raw_file_path).replace("\\","/")
+        print(yellowStr(f"[!] 文件为空，跳过: {raw_file_path}"))
+        return
 
-# 分离请求行、头部、正文
-parts = raw_data.split("\n\n", 1)
-header_block, body = parts if len(parts) == 2 else (raw_data, "")
+    parts = raw_data.split("\n\n", 1)
+    header_block, body = parts if len(parts) == 2 else (raw_data, "")
+    lines = header_block.strip().splitlines()
 
-lines = header_block.strip().splitlines()
-method, url, _ = lines[0].split(" ", 2)
-headers = {}
+    method, path, _ = lines[0].split(" ", 2)
+    headers = {}
+    for line in lines[1:]:
+        if ": " in line:
+            key, value = line.split(": ", 1)
+            headers[key] = value
 
-for line in lines[1:]:
-    if ": " in line:
-        key, value = line.split(": ", 1)
-        headers[key] = value
+    try:
+        body_json = json.loads(body.strip())
+        body_data = json.dumps(body_json, ensure_ascii=False)
+    except json.JSONDecodeError:
+        # 如果 body 不是标准 JSON，保留原样
+        body_data = body.strip()
 
-# 构造最终 JSON 数据
-output_data = {
-    "targetName": "（国外）小皮 加密密钥泄露 导致任意文件上传任意文件修改任意命令执行 漏洞",
-    "pocUrl": url,
-    "whiteBoolean": "AND",
-    "whiteList": ["1000"],
-    "blackBoolean": "AND",
-    "blackList": [],
-    "threadingNum": 20,
-    "waitTime": 5,
-    "method": method,
-    "headers": headers,
-    "data": json.dumps({
-        "pathname": "/xp/log/fatal/fatal.log",
-        "content": "123",
-        "encoding": "utf-8"
-    }, ensure_ascii=False)
-}
+    output_data = {
+        "targetName": config.get("targetName", ""),
+        "require_path": path,
+        "whiteBoolean": config.get("whiteBoolean", "AND"),
+        "whiteList": config.get("whiteList", []),
+        "blackBoolean": config.get("blackBoolean", "AND"),
+        "blackList": config.get("blackList", []),
+        "threadingNum": config.get("threadingNum", 10),
+        "waitTime": config.get("waitTime", 5),
+        "method": method,
+        "headers": headers,
+        "data": body_data,
+        "discript": config.get("discrip", "")
+    }
 
-# 写入 JSON 文件
-with open(output_file, "w", encoding="utf-8") as f:
-    json.dump(output_data, f, indent=2, ensure_ascii=False)
+    mkdir(output_file_path)
+    with open(output_file_path, "w", encoding="utf-8") as f:
+        json.dump(output_data, f, indent=2, ensure_ascii=False)
 
-print(f"已成功将 POC 转换为 JSON 格式并保存为 {output_file}")
+    output_file_path = str(output_file_path).replace("\\","/")
+    print(greenStr(f"[+] 已生成: {output_file_path}"))
 
-def row_to_json():
-    print()
 
+def is_non_empty_json(file_path):
+    if not os.path.exists(file_path):
+        return False
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return bool(data)
+    except Exception:
+        return False
+
+
+def worker(raw_dir="input/poc", config_file="config/config.json", output_dir="input/poc/json"):
+    mkdir(output_dir)
+    if not os.path.exists(config_file):
+        print(yellowStr(f"[!] 配置文件不存在: {config_file}"))
+        return
+
+    with open(config_file, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    for filename in os.listdir(raw_dir):
+        if not filename.endswith(".txt"):
+            continue
+
+        raw_file_path = os.path.join(raw_dir, filename)
+        json_file_name = os.path.splitext(filename)[0] + ".json"
+        output_file_path = os.path.join(output_dir, json_file_name)
+
+        if os.path.exists(output_file_path) and is_non_empty_json(output_file_path):
+            output_file_path = str(output_file_path).replace("\\","/")
+            print(greenStr(f"[-] {raw_dir}/{filename} 的json格式已存在且非空，存储路径为: {output_file_path}"))
+            continue
+
+        try:
+            parse_raw_to_json(raw_file_path, config, output_file_path)
+        except Exception as e:
+            print(redStr(f"[!] 处理失败: {raw_file_path} -> {e}"))
+
+
+def raw_to_json_main():
+    print(f"------------------ raw_to_json 模块 ------------------")
+    worker()
+    worker(raw_dir="input/exp", config_file="config/config.json", output_dir="input/exp/json")
+    print(f"------------------ raw_to_json 模块 ------------------")
 
 if __name__ == '__main__':
-    row_to_json()
+    raw_to_json_main()

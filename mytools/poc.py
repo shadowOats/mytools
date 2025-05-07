@@ -3,51 +3,58 @@ import requests
 import queue
 import threading
 import urllib3
-from .base import *
+from mytools.base import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 lock = threading.Lock()
 
+res1 = []  # 保存完整响应内容
+res2 = []  # 保存 URL
 
-def sand(config, url):
-    session = requests.Session()
-    return session.post(url + config["pocUrl"], headers=config["headers"], data=config["data"], verify=False,
-                        timeout=config["waitTime"])
+
+def write_final_results(config):
+    result_dir = f"output/poc_output/(len={len(res2)})_{str(config['targetName']).strip()}_{nowTime()}"
+    other_save_dir = "input/urls"
+
+    config["save_dir"] = result_dir
+    config["other_save_dir"] = other_save_dir
+
+    mkdir(result_dir)
+    writeFile(f"{result_dir}/content.txt", res1)
+    writeFile(f"{result_dir}/res.txt", res2)
+    writeFile(f"{other_save_dir}/poc_res_urls.txt", res2)
 
 
 def write_res(current, total, url, content, config, counter):
-    print(greenStr(f"[+] {current} / {total} 漏洞识别: {url}"))
-    result_dir = config['save_dir']
-    os.makedirs(result_dir, exist_ok=True)
     counter[1] += 1
     res = f"No: {counter[1]}\nurl: {url}\n{content}\n"
+    print(greenStr(f"\n[+] {current} / {total} 漏洞识别: {url}"))
     print(greenStr(res))
 
-    appenFile(result_dir + "/content.txt", res)
-    appenFile(result_dir + "/res.txt", url)
+    res1.append(res)
+    res2.append(url)
 
 
 def get_scan(url, headers, config, counter, total):
     with lock:
         counter[0] += 1
         current = counter[0]
+
     url = url if "://" in url else "http://" + url
+
     try:
         session = requests.Session()
-        resp = session.get(url + config["pocUrl"], headers=headers, verify=False, timeout=config["waitTime"])
+        resp = session.get(url + config["require_path"], headers=headers, verify=False, timeout=config["waitTime"])
         content = resp.text
 
         for white in config["whiteList"]:
             if all(black not in content for black in config["blackList"]) and white in content:
                 with lock:
-                    print(greenStr(f"[+] {current} / {total} 漏洞识别: {url}"))
-                    result_dir = config['save_dir']
-                    os.makedirs(result_dir, exist_ok=True)
-                    appenFile(result_dir + "/res.txt", url)
+                    write_res(current, total, url, content, config, counter)
                 return
         with lock:
-            print(yelloStr(f"[-] {current} / {total} 未识别: {url}"))
+            print(yellowStr(f"[-] {current} / {total} 未识别: {url}"))
     except Exception as e:
         with lock:
             print(redStr(f"[!] {current} / {total} 请求失败: {url}"), e)
@@ -65,47 +72,48 @@ def run_get_poc(config, urls):
     for url in urls:
         q.put(url)
 
-    counter = [0]
-
-    headers = {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': '*/*',
-        'Connection': 'keep-alive',
-    }
-
+    counter = [0, 0]
+    headers = {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*', 'Connection': 'keep-alive'}
     total = len(urls)
+
+    threads = []
     for _ in range(config["threadingNum"]):
-        threading.Thread(target=get_worker, args=(q, headers, config, counter, total)).start()
+        t = threading.Thread(target=get_worker, args=(q, headers, config, counter, total))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    write_final_results(config)
 
 
 def post_scan(url, config, counter, total):
     with lock:
         counter[0] += 1
         current = counter[0]
+
     url = url if "://" in url else "http://" + url
     try:
         session = requests.Session()
-        resp = session.post(url + config["pocUrl"], headers=config["headers"], data=config["data"], verify=False,
+        resp = session.post(url + config["require_path"], headers=config["headers"], data=config["data"], verify=False,
                             timeout=config["waitTime"])
         content = resp.text
-        # print(content)
-        # 根据 whiteBoolean 选择匹配逻辑
+
         if config["whiteBoolean"] == "AND":
-            # 所有白名单都需要匹配
             if all(white in content for white in config["whiteList"]) and all(
                     black not in content for black in config["blackList"]):
                 with lock:
                     write_res(current, total, url, content, config, counter)
                 return
         elif config["whiteBoolean"] == "OR":
-            # 至少一个白名单匹配
             if any(white in content for white in config["whiteList"]) and all(
                     black not in content for black in config["blackList"]):
                 with lock:
                     write_res(current, total, url, content, config, counter)
                 return
         with lock:
-            print(yelloStr(f"[-] {current} / {total} 未识别: {url}"))
+            print(yellowStr(f"[-] {current} / {total} 未识别: {url}"))
     except Exception as e:
         with lock:
             print(redStr(f"[!] {current} / {total} 请求失败: {url}"), e)
@@ -118,39 +126,29 @@ def post_worker(q, config, counter, total):
         post_scan(url, config, counter, total)
         q.task_done()
 
-    # while not q.empty():
-    #     try:
-    #         with lock:
-    #             url = q.get(timeout=3)  # 如果3秒没有任务则跳出
-    #         print(f"[INFO] 线程开始处理: {url}")  # 调试输出
-    #     except queue.Empty:
-    #         print("[INFO] 队列已空，退出线程")  # 调试输出
-    #         break  # 队列为空，退出
-
 
 def run_post_poc(config, urls):
+    print(f"------------------ poc模块 ------------------")
     q = queue.Queue()
-
-    # 将URLs放入队列中
     for url in urls:
         q.put(url)
 
     counter = [0, 0]
-
     total = len(urls)
 
-    # 使用线程池来限制并发线程数量
     threads = []
     for _ in range(config["threadingNum"]):
         t = threading.Thread(target=post_worker, args=(q, config, counter, total))
         threads.append(t)
         t.start()
 
-    # 等待所有线程完成
     for t in threads:
         t.join()
 
-    print("[+] 所有任务完成")
+    write_final_results(config)
+    print(greenStr(f"\n[+] 所有任务完成, 完成时间  -->  {nowTime()}"))
+    print(greenStr(f"[+] 一共 poc 到 {len(res2)} 个url"))
+    print(f"------------------ poc模块 ------------------")
 
 
 def load_config(config_path):
@@ -158,38 +156,28 @@ def load_config(config_path):
         return json.load(f)
 
 
-def poc_main(vul_path="1-input/poc.txt"):
+def poc_main(vul_path="input/poc/json/raw1.json"):
+    try:
+        readFile(vul_path)
+    except Exception as e:
+        print(yellowStr(f"请检查 {vul_path} 文件是否创建， 并且里面是否有值"))
+        return
+
     config = load_config(vul_path)
-    urls = readFile("1-input/urls.txt")
+
+    urlsPath = "input/urls/urls.txt"
+    try:
+        urls = readFile(urlsPath)
+    except Exception as e:
+        print(yellowStr(f"请检查 input/urls/urls.txt 文件是否创建， 并且里面是否有值"))
+        return
+
     urls = list(set(url.strip() for url in urls if url.strip()))
-    config["save_dir"] = f"2-poc_output/{config['targetName']}_{nowTime()}"
 
     if config["method"].upper() == "GET":
         run_get_poc(config, urls)
     elif config["method"].upper() == "POST":
         run_post_poc(config, urls)
-
-
-def poc_ssh_connect_mul():
-    ssh_client = create_ssh_client()
-    key = "urls_ssh_connect/key"
-    save_dir = f"urls_ssh_connect/urls_connect_ssh_{nowTime()}"
-    user = "root"
-    urls = readFile("urls_ssh_connect/urls.txt")
-    port = "22"
-    res = ""
-    count = 0
-    for url in urls:
-        ip = only_domain(url)
-        if test_ssh_connection(ssh_client, key, user, ip, port):
-            count += 1
-            res += f"No: {count}\n{ip}\n\n"
-            print(greenStr(f"{url}成功连接ssh --> 编号: {count}\n"))
-    writeFile(save_dir, res)
-    if count:
-        print(f"批量连接ssh成功， 一共有 {count} 个服务器可连接")
-        return
-    print(f"没有服务器可连接， 行不行啊， 菜狗！！")
 
 
 if __name__ == '__main__':

@@ -3,30 +3,37 @@ import os
 import json
 
 
-def yellowStr(str): return f"\033[0;93m {str}\033[0m"
+def yellowStr(str): return f"\033[0;93m{str}\033[0m"
 
 
-def redStr(str): return f"\033[0;91m {str}\033[0m"
+def redStr(str): return f"\033[0;91m{str}\033[0m"
 
 
-def greenStr(str): return f"\033[0;92m {str}\033[0m"
+def greenStr(str): return f"\033[0;92m{str}\033[0m"
 
 
-def pinkStr(str): return f"\033[0;95m {str}\033[0m"
+def pinkStr(str): return f"\033[0;95m{str}\033[0m"
 
-def mkdir(dirPath):
-    """
-    创建目录，如果目录已存在则忽略，如果创建失败则抛出异常。
-    """
-    try:
-        if not os.path.exists(dirPath):
-            os.makedirs(dirPath, exist_ok=True)
-        #     return
-        # else:
-        #     raise Exception(yelloStr(f"[!] 虽然未抛异常，但目录仍未成功创建: {dirPath}"))
-    except Exception as e:
-        print(redStr(f"[!] 创建目录失败: {dirPath}"))
-        raise e
+def mkdir(path):
+    # 如果是文件路径（包含文件名），取上级目录；如果是目录路径，直接创建
+    dir_path = path if path.endswith(("/", "\\")) or "." not in os.path.basename(path) else os.path.dirname(path)
+    if dir_path and not os.path.exists(dir_path):
+        os.makedirs(dir_path, exist_ok=True)
+
+
+# def mkdir(dirPath):
+#     """
+#     创建目录，如果目录已存在则忽略，如果创建失败则抛出异常。
+#     """
+#     try:
+#         if not os.path.exists(dirPath):
+#             os.makedirs(dirPath, exist_ok=True)
+#         #     return
+#         # else:
+#         #     raise Exception(yelloStr(f"[!] 虽然未抛异常，但目录仍未成功创建: {dirPath}"))
+#     except Exception as e:
+#         print(redStr(f"[!] 创建目录失败: {dirPath}"))
+#         raise e
 
 
 def appenFile(filePath, fileContent):

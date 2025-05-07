@@ -5,7 +5,7 @@ import re
 from time import sleep
 
 sys.path.append("/base_tool/base_tool/")
-from mytools.base import *  # 自定义工具模块
+from mytools import *  # 自定义工具模块
 import os
 
 # 相对路径
@@ -70,10 +70,10 @@ def woker(url):
 
     if sum([baidu, sogou, so360, google]) > 0:
         have_weight += 1
-        res = f"\nNo: {have_weight}\nurl: {url}\n百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
+        res = f"No: {have_weight}\nurl: {url}\n百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
         print(greenStr(res))
         return res
-    res = f"\n百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
+    res = f"百度权重: {baidu}\n搜狗权重: {sogou}\n360权重: {so360}\n谷歌权重: {google}\n"
     print(yellowStr(res))
     return ""
 
@@ -99,7 +99,7 @@ def web_weight_main():
     browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
 
     into_page()
-    urls = readFile("input/urls.txt")
+    urls = readFile("input/urls/urls.txt")
     urls = format_domains(urls)[2]
     total = len(urls)
     result = ""
@@ -111,10 +111,13 @@ def web_weight_main():
         if len(res):
             result += res
     global have_weight
-    save_path = f"web_weight_out/{nowTime()}/res.txt"
+    save_path = f"output/web_weight_output/({have_weight})_{nowTime()}"
+    mkdir(save_path)  # 正确创建目录
+
     if have_weight:
-        print(greenStr(f"\n恭喜你, 亲, 一共找到了 {have_weight} 个有权重的网站,已存储至路径: {save_path}"))
-        writeFile(save_path, result)
+        full_path = os.path.join(save_path, "res.txt")
+        print(greenStr(f"\n恭喜你, 亲, 一共找到了 {have_weight} 个有权重的网站,已存储至路径: {full_path}"))
+        writeFile(full_path, result)
         return
     print(greenStr(f"\n一个有权重的网站都没有, 行不行的, 叼毛"))
 

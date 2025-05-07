@@ -121,7 +121,7 @@ def fofa_api_main():
     # key = '59746060c289b3edd58a60d9c9d09b91'
 
     # query = 'title="Vite App" || body="Powered by Vite" || header="vite"'
-    query = str(input("请输入fofa语句: "))
+    query = str(input("请输入fofa语句(请尽量不要开代理): "))
     size = str(input("请输入你要的结果条数(最大10000条，输入 -1 给你拿 10000 条): "))
     if size == '-1':
         size = '10000'

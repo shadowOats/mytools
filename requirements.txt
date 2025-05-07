@@ -1,0 +1,4 @@
+selenium
+requests
+urllib3
+git+https://github.com/shadowOats/mytools.git

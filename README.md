@@ -2,12 +2,18 @@
 
 一个用于简化python开发流程的工具
 
-## 安装
+## 安装 git 工具
 
 ```bash
 1. 安装 git 工具
 2. 向 shadowOats 申请python脚本拉取权限
 3. pip install git+https://github.com/shadowOats/mytools.git
+```
+
+## 安装 依赖包
+
+```
+pip install -r requirements.txt
 ```
 
 
@@ -52,8 +58,6 @@
 git add .
 git commit -m "你也不想被调查吧"
 git push
-
-
 ```
 
 

@@ -158,7 +158,7 @@ def load_config(config_path):
         return json.load(f)
 
 
-def poc(vul_path="1-input/poc.txt"):
+def poc_main(vul_path="1-input/poc.txt"):
     config = load_config(vul_path)
     urls = readFile("1-input/urls.txt")
     urls = list(set(url.strip() for url in urls if url.strip()))
@@ -190,3 +190,7 @@ def poc_ssh_connect_mul():
         print(f"批量连接ssh成功， 一共有 {count} 个服务器可连接")
         return
     print(f"没有服务器可连接， 行不行啊， 菜狗！！")
+
+
+if __name__ == '__main__':
+    poc_main()

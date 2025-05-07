@@ -79,9 +79,9 @@ def shell(cmd, url):
             print(redStr(e))
 
 
-def main():
+def exp_main():
     print()
 
 
 if __name__ == '__main__':
-    main()
+    exp_main()

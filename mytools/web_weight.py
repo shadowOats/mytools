@@ -20,7 +20,6 @@ chrome_path = os.path.join(base_dir, chrome_page)
 chrome_options = webdriver.ChromeOptions()
 chrome_options.binary_location = chrome_path
 
-browser = webdriver.Chrome(chrome_options=chrome_options)
 
 def wait_for_weight(xpath, timeout=10):
     """等待目标图片加载并提取src中的权重数字"""
@@ -63,7 +62,7 @@ count = 0
 have_weight = 0
 
 
-def test(url):
+def woker(url):
     global have_weight
     """等待并提取所有搜索引擎权重"""
     baidu = wait_for_weight('/html/body/div[5]/div[2]/div[2]/table/tbody/tr[2]/td/ul/li[1]/a/img') or 0
@@ -88,7 +87,7 @@ def find_weight(url, total):
         print(f"\n[{count + 1} / {total}] 查询: {url}")
         count += 1
         send_query(url)
-        res = test(url)
+        res = woker(url)
         if res and len(res.strip()):
             return res
         return ""
@@ -97,6 +96,7 @@ def find_weight(url, total):
 
 
 def web_weight_main():
+    browser = webdriver.Chrome(options=chrome_options)
     browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
 
     into_page()

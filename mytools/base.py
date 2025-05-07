@@ -65,6 +65,13 @@ def readFile(fileName):
 def nowTime(): return datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
 
 
+# 获取包路径下的文件内容
+def getFile(path):
+    # 获取当前脚本所在目录（不是运行目录）
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_dir, path)
+
+
 def parse_raw_http_to_json(raw_request: str, target_name: str, poc_url: str, output_file: str = "1-raw_poc.txt"):
     # 分离 header 和 body
     headers_part, body = raw_request.split("\n\n", 1)
@@ -96,3 +103,4 @@ def parse_raw_http_to_json(raw_request: str, target_name: str, poc_url: str, out
         json.dump(json_data, f, ensure_ascii=False, indent=2)
 
     print(f"[+] 成功保存到 {output_file}")
+

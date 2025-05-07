@@ -5,15 +5,12 @@ import re
 from time import sleep
 
 sys.path.append("/base_tool/base_tool/")
-from mytools import *  # 自定义工具模块
+from mytools.base import *  # 自定义工具模块
 import os
 
 # 相对路径
 chrome_page = "Chrome/Application/chrome.exe"
-
-# 获取当前脚本所在目录（不是运行目录）
-base_dir = os.path.dirname(os.path.abspath(__file__))
-chrome_path = os.path.join(base_dir, chrome_page)
+chrome_path = getFile(chrome_page)
 # chrome_options.add_argument("--headless")  # 如需后台运行可启用此项
 
 # 初始化 Chrome 配置
@@ -23,6 +20,7 @@ chrome_options.binary_location = chrome_path
 
 def wait_for_weight(xpath, timeout=10):
     """等待目标图片加载并提取src中的权重数字"""
+    # 用抑制报错的方式, 去检测图片 x.png 是否加载, 来拿到我们的权重值
     for i in range(timeout):
         try:
             img = browser.find_element(By.XPATH, xpath)
@@ -96,6 +94,7 @@ def find_weight(url, total):
 
 
 def web_weight_main():
+    global browser
     browser = webdriver.Chrome(options=chrome_options)
     browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
 

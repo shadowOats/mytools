@@ -74,7 +74,7 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
 
         # 创建输出目录
         timestamp = nowTime()
-        dir = f"output/fofa_api_output/({len(datas)})_{timestamp}"
+        dir = f"output/fofa_api_output/{timestamp}_({len(datas)})"
         # os.makedirs(dir)
         mkdir(dir)
 
@@ -97,17 +97,17 @@ def fofa_gogogo(main_url="http://fofa.xmint.cn", email="", key="45d8cfcccaf45289
                 url_entry = build_url(ip, port)
                 urls += url_entry + "\n"
 
-        log = f"查询语句为: {query}\n查询条数为: {size}"
+        log = f"你查询本语句的时间是: {nowTime()}\n查询语句为: {query}\n查询条数为: {size}\n"
 
         # 写入文件
-        writeFile(f"{dir}/log.txt", log)
+        appenFile(f"{dir}/log.txt", log)
         writeFile(f"{dir}/domains.txt", domains)
         writeFile(f"{dir}/ips.txt", ips)
         writeFile(f"{dir}/urls.txt", urls)
 
         print(pinkStr(f"\n老公~~ 人家已经帮你把资产找出来了噢, 存放在目录 {dir} 下啦~~ 今晚记得奖励人家噢 QAQ"))
     except Exception as e:
-        print(pinkStr("\n老公~~ 出现报错了呢... 这边建议检查一下小猫咪有没有关噢~~\n") + str(e))
+        print(pinkStr("\n你个叼毛，是不是没关代理 ？？\n") + str(e))
 
 
 def fofa_api_main():

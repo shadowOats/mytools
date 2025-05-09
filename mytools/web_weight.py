@@ -10,7 +10,7 @@ import os
 
 # 相对路径
 chrome_page = "Chrome/Application/chrome.exe"
-chrome_path = getFile(chrome_page)
+chrome_path = read_pack_file(chrome_page)
 # chrome_options.add_argument("--headless")  # 如需后台运行可启用此项
 
 # 初始化 Chrome 配置
@@ -109,14 +109,14 @@ def web_weight_main():
             continue
         res = find_weight(url, total)
         if len(res):
-            result += res
+            result += res+"\n"
     global have_weight
-    save_path = f"output/web_weight_output/({have_weight})_{nowTime()}"
+    save_path = f"output/web_weight_output/{nowTime()}_({have_weight})"
     mkdir(save_path)  # 正确创建目录
 
     if have_weight:
         full_path = os.path.join(save_path, "res.txt")
-        print(greenStr(f"\n恭喜你, 亲, 一共找到了 {have_weight} 个有权重的网站,已存储至路径: {full_path}"))
+        print(pinkStr(f"\n亲爱的, 一共找到了 {have_weight} 个有权重的网站嗷, 已存储至路径: {full_path}"))
         writeFile(full_path, result)
         return
     print(greenStr(f"\n一个有权重的网站都没有, 行不行的, 叼毛"))

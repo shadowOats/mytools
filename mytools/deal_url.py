@@ -2,6 +2,7 @@ import re
 from urllib.parse import urlparse
 from .base import *
 
+
 def format_url(url):
     url = url.strip()
     # 检测 url 是否为 http:// 或者 https:// 开头的
@@ -34,6 +35,7 @@ def format_urls(urls, message=0):
             url = url.replace("\n", "")
             if not url:
                 continue
+
             full = format_url(url)
             parsed = urlparse(full)
             scheme_host_port = f"{parsed.scheme}://{parsed.hostname}:{parsed.port}"

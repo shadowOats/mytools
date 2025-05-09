@@ -11,7 +11,7 @@ from .deal_url import *
 # 原始包数据 转 json数据模块
 from .raw_to_json import raw_to_json_main
 
-# ssh 批量传输模块
+# ssh 批量连接模块
 from .ssh_connect import *
 
 # ------------------------功能模块类----------------------------

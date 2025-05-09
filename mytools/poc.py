@@ -14,7 +14,7 @@ res2 = []  # 保存 URL
 
 
 def write_final_results(config):
-    result_dir = f"output/poc_output/(len={len(res2)})_{str(config['targetName']).strip()}_{nowTime()}"
+    result_dir = f"output/poc_output/{nowTime()}_(len={len(res2)})_{str(config['targetName']).strip()}"
     other_save_dir = "input/urls"
 
     config["save_dir"] = result_dir

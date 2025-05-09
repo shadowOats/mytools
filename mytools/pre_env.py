@@ -32,7 +32,7 @@ def install_or_upgrade(package):
 
 
 def read_requirements():
-    lines = readFile(getFile("requirements.txt"))
+    lines = readFile(read_pack_file("requirements.txt"))
     packages = {}
     for line in lines:
         line = line.strip()

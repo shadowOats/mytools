@@ -14,6 +14,9 @@ from .raw_to_json import raw_to_json_main
 # ssh 批量连接模块
 from .ssh_connect import *
 
+# httpx 二开
+from .httpx2 import *
+
 # ------------------------功能模块类----------------------------
 # poc模块
 from .poc import poc_main

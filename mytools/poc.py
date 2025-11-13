@@ -14,7 +14,7 @@ res2 = []  # 保存 URL
 
 
 def write_final_results(config):
-    result_dir = f"output/poc_output/{nowTime()}_(len={len(res2)})_{str(config['targetName']).strip()}"
+    result_dir = f"output/poc_output/{nowTime()}_({len(res2)})_{str(config['targetName']).strip()}"
     other_save_dir = "input/urls"
 
     config["save_dir"] = result_dir
@@ -47,6 +47,8 @@ def get_scan(url, headers, config, counter, total):
         session = requests.Session()
         resp = session.get(url + config["require_path"], headers=headers, verify=False, timeout=config["waitTime"])
         content = resp.text
+        print(resp)
+        print("11")
 
         for white in config["whiteList"]:
             if all(black not in content for black in config["blackList"]) and white in content:
@@ -99,7 +101,7 @@ def post_scan(url, config, counter, total):
         resp = session.post(url + config["require_path"], headers=config["headers"], data=config["data"], verify=False,
                             timeout=config["waitTime"])
         content = resp.text
-
+        print(content)
         if config["whiteBoolean"] == "AND":
             if all(white in content for white in config["whiteList"]) and all(
                     black not in content for black in config["blackList"]):

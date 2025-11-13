@@ -5,7 +5,8 @@ import re
 from time import sleep
 
 sys.path.append("/base_tool/base_tool/")
-from mytools import *  # 自定义工具模块
+from .base import *  # 自定义工具模块
+from .deal_url import *
 import os
 
 # 相对路径
@@ -99,7 +100,7 @@ def web_weight_main():
     browser.get('https://www.aizhan.com/cha/guiyang.tgjyjt.com/')
 
     into_page()
-    urls = readFile("input/urls/urls.txt")
+    urls = readFile("input/urls.txt")
     urls = format_domains(urls)[2]
     total = len(urls)
     result = ""

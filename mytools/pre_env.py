@@ -50,9 +50,6 @@ def pre_env_main():
     packages = read_requirements()
     to_upgrade = []
 
-    for i in packages:
-        print(i)
-
     for pkg, ver in packages.items():
         if check_and_upgrade_package(pkg, ver):
             to_upgrade.append(f"{pkg}=={ver}" if ver != "0.0.0" else pkg)
@@ -66,10 +63,10 @@ def pre_env_main():
             for p in to_upgrade:
                 install_or_upgrade(p)
         else:
-            print("❌ 用户取消了组件升级，程序无法继续运行。")
+            print(f"❌ 用户取消了组件升级，程序无法继续运行。\n")
             sys.exit(1)
     else:
-        print("🎉 所有依赖项已满足，可继续执行程序。")
+        print(f"🎉 所有依赖项已满足，可继续执行程序。\n")
 
 
 if __name__ == "__main__":
